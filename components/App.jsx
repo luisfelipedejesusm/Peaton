@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Light from './Light';
 import ControlButton from './ControlButton';
 import db from './../index.js';
+var mqtt = require('mqtt')
+var client  = mqtt.connect('mqtt://localhost:1883');
 
 
 function useInterval(callback, delay) {
@@ -23,19 +25,6 @@ function useInterval(callback, delay) {
   }, [delay]);
 }
 
-function writeColorFirebase(color) {
-  var database = db.database();
-  db.database().ref("/").set({
-    color: color
-  });
-}
-
-
-
-
-
-
-
 export default function App() {
   const SIGNAL_DELAY = 5;
   const [lightOn, setLightOn] = useState('red');
@@ -51,9 +40,14 @@ export default function App() {
   useEffect(() => {
     var semaforoRef = db.database().ref('/');
 
-    semaforoRef.on('value', (snapshot) =>{
-      const data = snapshot.val();
-      if(data.color == 'red'){
+    //Se suscribe al tópico color
+    client.on('connect', () =>{
+      client.subscribe('color_inverse');
+    })
+
+    //Recibe el mensaje
+    client.on('message', (topic, message) =>{
+      if(message == 'red'){
          setLightOn('green');
       } else {
         setLightOn('red');
@@ -61,43 +55,6 @@ export default function App() {
     });
 
   }, []);
-
-
-  // useInterval(()=>{
-  //   if(counter > 1) {
-  //     setCounter(counter-1);
-  //   } else {
-  //     if(lightOn == 'red') {
-  //       setLightOn('green');
-  //       // codigo para guardar en fb
-  //       setCounter(5);
-  //       // writeColorFirebase('green');
-  //     } else if(lightOn == 'yellow') {
-  //       setLightOn('red');
-  //       setCounter(5);
-  //       // writeColorFirebase('red');
-  //     } else if(lightOn == 'green') {
-  //       setLightOn('yellow');
-  //       setCounter(3);
-  //       // writeColorFirebase('yellow');
-  //     }
-  //     // writeColorFirebase(lightOn);
-  //     // setCounter(SIGNAL_DELAY);
-  //   }
-  // }, delay);
-
-  // useEffect(()=>{
-  //   if(isStarted) {
-  //     setLightOn('red');
-  //     writeColorFirebase('red');
-  //     setCounter(SIGNAL_DELAY);
-  //     setDelay(1000);
-  //   } else {
-  //     setLightOn(null);
-  //     setCounter(0);
-  //     setDelay(0);
-  //   }
-  // }, [isStarted])
 
 
   return (
