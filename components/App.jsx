@@ -3,8 +3,23 @@ import Light from './Light';
 import ControlButton from './ControlButton';
 import db from './../index.js';
 var mqtt = require('mqtt')
-var client  = mqtt.connect('mqtt://localhost:1883');
+var client  = mqtt.connect('ws://localhost:5001');
 
+//Se suscribe al tópico color
+client.on('connect', () =>{
+  console.log("Llegue")
+  client.subscribe('color_inverse');
+})
+
+//Recibe el mensaje
+client.on('message', (topic, message) =>{
+  console.log(message.toString())
+  if(message == 'red'){
+     setLightOn('green');
+  } else {
+    setLightOn('red');
+  }
+});
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -35,26 +50,7 @@ export default function App() {
   
   // este metodo, cuando agarra un valor en firebase, corre, y quiero
   // que se cambie el color cuando el metodo traiga el nuevo color
-  
-  
-  useEffect(() => {
-    var semaforoRef = db.database().ref('/');
 
-    //Se suscribe al tópico color
-    client.on('connect', () =>{
-      client.subscribe('color_inverse');
-    })
-
-    //Recibe el mensaje
-    client.on('message', (topic, message) =>{
-      if(message == 'red'){
-         setLightOn('green');
-      } else {
-        setLightOn('red');
-      }
-    });
-
-  }, []);
 
 
   return (
